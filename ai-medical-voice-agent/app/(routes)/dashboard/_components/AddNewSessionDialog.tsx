@@ -18,18 +18,16 @@ import { doctorAgent } from "./DoctorAgentCard";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import SuggestedDocterCard from "./SuggestedDocterCard";
+import { useRouter } from "next/navigation";
 
 function AddNewSessionDialog() {
+  const router = useRouter();
   const [note, setNote] = useState("");
   const [loading, setloading] = useState(false);
   const [suggestDoctors, setsuggestDoctors] = useState<doctorAgent[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<doctorAgent | null>(
     null
   );
-
-  // console.log('====================================');
-  // console.log("suggestDoctors: ",suggestDoctors);
-  // console.log('====================================');
 
   const handleNext = async () => {
     try {
@@ -58,9 +56,8 @@ function AddNewSessionDialog() {
       });
       const data = response.data;
       if(data?.sessionId){
-       console.log("sessionId: ",data?.sessionId);
        // Route new consultation screen
-      //  router.push(`/dashboard/medical-agent/${data?.sessionId}`);
+       router.push(`/dashboard/medical-agent/${data?.sessionId}`);
       }
       toast.success("Consultation started");
     } catch (error) {
@@ -130,7 +127,7 @@ function AddNewSessionDialog() {
               )}
             </Button>
           ) : (
-            <Button onClick={onStartConsultation} disabled={loading}>
+            <Button onClick={onStartConsultation} disabled={loading} className="cursor-pointer">
               Start Consultation {loading ? <Loader2 className="animate-spin" /> : <IconArrowRight />}
             </Button>
           )}
