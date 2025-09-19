@@ -123,7 +123,9 @@ const Navbar = () => {
       ) : (
         <div className="flex items-center gap-2">
           <UserButton />
-          <Button>Dashboard</Button>
+          <Link href="/dashboard">
+            <Button className="cursor-pointer">Dashboard</Button>
+          </Link>
         </div>
       )}
     </nav>
