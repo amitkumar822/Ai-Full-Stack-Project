@@ -37,12 +37,21 @@ const REPORT_GENERATION_PROMPT = `You are an AI Medical Voice Agent that just fi
     `;
 
 export async function POST(req: NextRequest) {
-  const { messages, sessionId, sessionDetails } = await req.json();
-  console.log("Generate Report: ",messages, sessionId, sessionDetails);
   try {
-    const UserInput = `AI Doctor Agent Info: ${JSON.stringify(sessionDetails)}+ , Conversation: ${messages}`;
+    const { messages, sessionId, sessionDetails } = await req.json();
+    
+    // Validate required fields
+    if (!messages || !sessionId || !sessionDetails) {
+      return NextResponse.json(
+        { error: "Missing required fields: messages, sessionId, or sessionDetails" },
+        { status: 400 }
+      );
+    }
+
+    const UserInput = `AI Doctor Agent Info: ${JSON.stringify(sessionDetails)}, Conversation: ${JSON.stringify(messages)}`;
+    
     const completion = await openai.chat.completions.create({
-      model: "google/gemini-2.0-flash-exp:free",
+      model: "gpt-4o-mini", // Using a more reliable model
       messages: [
         {
           role: "system",
@@ -53,25 +62,51 @@ export async function POST(req: NextRequest) {
           content: UserInput,
         },
       ],
+      temperature: 0.1, // Lower temperature for more consistent JSON output
     });
+    
     const rawResponse = completion.choices[0].message;
-    // @ts-ignore
+    
+    if (!rawResponse.content) {
+      throw new Error("No content received from OpenAI");
+    }
+    
+    // Clean and parse the JSON response
     const ResString = rawResponse.content
       .trim()
-      .replace("```json", "")
-      .replace("```", "");
-    const JSONResponse = JSON.parse(ResString);
-    // update the session details with the report
+      .replace(/```json\s*/g, "")
+      .replace(/```\s*/g, "")
+      .replace(/^\s*/, "")
+      .replace(/\s*$/, "");
+    
+    let JSONResponse;
+    try {
+      JSONResponse = JSON.parse(ResString);
+    } catch (parseError) {
+      throw new Error("Invalid JSON response from AI");
+    }
+    
+    // Ensure the report has the sessionId
+    JSONResponse.sessionId = sessionId;
+    JSONResponse.timestamp = new Date().toISOString();
+    
+    // Update the session details with the report
     await db
       .update(SessionChartTable)
-      .set({ report: JSONResponse, conversation: messages })
-      .where(eq(SessionChartTable.id, sessionId));
+      .set({ 
+        report: JSONResponse, 
+        conversation: messages 
+      })
+      .where(eq(SessionChartTable.sessionId, sessionId)); // Use sessionId instead of id
 
     return NextResponse.json(JSONResponse);
   } catch (error) {
-    console.log(error);
+    console.error("Error generating report: ", error);
     return NextResponse.json(
-      { error: "Failed to generate report" },
+      { 
+        error: "Failed to generate report", 
+        details: error instanceof Error ? error.message : "Unknown error" 
+      },
       { status: 500 }
     );
   }

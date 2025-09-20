@@ -1,5 +1,5 @@
 "use client";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { doctorAgent } from "../../_components/DoctorAgentCard";
@@ -24,6 +24,7 @@ type messages = {
 };
 
 function MedicalVoiceAgent() {
+  const router = useRouter();
   const { sessionId } = useParams();
   const [sessionDetails, setSessionDetails] = useState<SessionDetailsType>();
 
@@ -128,23 +129,30 @@ function MedicalVoiceAgent() {
   };
 
   const endCall = async () => {
-    setIsLoading(true);
-    if (!vapiInstance) return;
-    // stop the call
-    vapiInstance.stop();
-    // Optionally remove listeners (good for memory management)
-    // vapiInstance.removeAllListeners();
-    vapiInstance.off("call-start");
-    vapiInstance.off("call-end");
-    vapiInstance.off("message");
+    try {
+      setIsLoading(true);
+      if (!vapiInstance) return;
+      // stop the call
+      vapiInstance.stop();
+      // Remove all listeners (good for memory management)
+      vapiInstance.removeAllListeners();
 
-    // Clear the instance
-    setvapiInstance(null);
-    setIsCallActive(false);
+      // Clear the instance
+      setvapiInstance(null);
+      setIsCallActive(false);
 
-    const result = await generateReport();
-
-    setIsLoading(false);
+      const result = await generateReport();
+      if (result) {
+        toast.success("Report generated successfully");
+        router.replace(`/dashboard`);
+      } else {
+        toast.error("Failed to generate report");
+      }
+    } catch (error) {
+      toast.error("Error ending call");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const generateReport = async () => {
