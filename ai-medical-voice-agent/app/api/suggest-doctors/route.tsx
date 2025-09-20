@@ -5,46 +5,46 @@ import { NextRequest, NextResponse } from "next/server";
 // Helper function to suggest doctors based on symptoms when API fails
 function suggestDoctorsBySymptoms(notes: string) {
   const symptoms = notes.toLowerCase();
-  
+
   // Map common symptoms to relevant doctors
   const symptomToDoctorMap: { [key: string]: number[] } = {
-    'headache': [1, 4, 10], // General Physician, Psychologist, Dentist
-    'fever': [1, 2], // General Physician, Pediatrician
-    'cough': [1, 7], // General Physician, ENT
-    'skin': [3], // Dermatologist
-    'rash': [3], // Dermatologist
-    'acne': [3], // Dermatologist
-    'heart': [6], // Cardiologist
-    'chest': [6], // Cardiologist
-    'blood pressure': [6], // Cardiologist
-    'bone': [8], // Orthopedic
-    'joint': [8], // Orthopedic
-    'muscle': [8], // Orthopedic
-    'pain': [1, 8], // General Physician, Orthopedic
-    'ear': [7], // ENT
-    'nose': [7], // ENT
-    'throat': [7], // ENT
-    'mental': [4], // Psychologist
-    'stress': [4], // Psychologist
-    'anxiety': [4], // Psychologist
-    'depression': [4], // Psychologist
-    'nutrition': [5], // Nutritionist
-    'diet': [5], // Nutritionist
-    'weight': [5], // Nutritionist
-    'women': [9], // Gynecologist
-    'pregnancy': [9], // Gynecologist
-    'dental': [10], // Dentist
-    'tooth': [10], // Dentist
-    'child': [2], // Pediatrician
-    'baby': [2], // Pediatrician
+    headache: [1, 4, 10], // General Physician, Psychologist, Dentist
+    fever: [1, 2], // General Physician, Pediatrician
+    cough: [1, 7], // General Physician, ENT
+    skin: [3], // Dermatologist
+    rash: [3], // Dermatologist
+    acne: [3], // Dermatologist
+    heart: [6], // Cardiologist
+    chest: [6], // Cardiologist
+    "blood pressure": [6], // Cardiologist
+    bone: [8], // Orthopedic
+    joint: [8], // Orthopedic
+    muscle: [8], // Orthopedic
+    pain: [1, 8], // General Physician, Orthopedic
+    ear: [7], // ENT
+    nose: [7], // ENT
+    throat: [7], // ENT
+    mental: [4], // Psychologist
+    stress: [4], // Psychologist
+    anxiety: [4], // Psychologist
+    depression: [4], // Psychologist
+    nutrition: [5], // Nutritionist
+    diet: [5], // Nutritionist
+    weight: [5], // Nutritionist
+    women: [9], // Gynecologist
+    pregnancy: [9], // Gynecologist
+    dental: [10], // Dentist
+    tooth: [10], // Dentist
+    child: [2], // Pediatrician
+    baby: [2], // Pediatrician
   };
 
   // Find matching doctors based on symptoms
   const suggestedIds = new Set<number>();
-  
+
   for (const [symptom, doctorIds] of Object.entries(symptomToDoctorMap)) {
     if (symptoms.includes(symptom)) {
-      doctorIds.forEach(id => suggestedIds.add(id));
+      doctorIds.forEach((id) => suggestedIds.add(id));
     }
   }
 
@@ -54,9 +54,10 @@ function suggestDoctorsBySymptoms(notes: string) {
   }
 
   // Convert to doctor objects and limit to 3
-  return AIDoctorAgents
-    .filter(doctor => suggestedIds.has(doctor.id))
-    .slice(0, 3);
+  return AIDoctorAgents.filter((doctor) => suggestedIds.has(doctor.id)).slice(
+    0,
+    3
+  );
 }
 
 export async function POST(req: NextRequest) {
@@ -100,10 +101,9 @@ export async function POST(req: NextRequest) {
       .trim()
       .replace("```json", "")
       .replace("```", "");
-    const ResObject = JSON.parse(ResString);
-    return NextResponse.json(ResObject?.doctors || []);
+    const JSONResponse = JSON.parse(ResString);
+    return NextResponse.json(JSONResponse?.doctors || []);
   } catch (error: any) {
-
     // Handle rate limit error (429) by returning symptom-based fallback doctors
     if (error.status === 429 || error.code === 429) {
       return NextResponse.json(suggestDoctorsBySymptoms(notes));
