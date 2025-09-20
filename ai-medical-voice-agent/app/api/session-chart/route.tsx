@@ -31,15 +31,25 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  
   try {
-    const {searchParams} = new URL(req.url);
+    const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get("sessionId");
-    const result = await db
-      .select()
-      .from(SessionChartTable)
-      .where(eq(SessionChartTable.sessionId, sessionId as string));
-    return NextResponse.json(result[0]);
+    const user = await currentUser();
+
+    if (sessionId === "all") {
+      const result = await db
+        .select()
+        .from(SessionChartTable)
+        .where(eq(SessionChartTable.createdBy, user?.emailAddresses[0].emailAddress as string));
+      
+        return NextResponse.json(result);
+    } else {
+      const result = await db
+        .select()
+        .from(SessionChartTable)
+        .where(eq(SessionChartTable.sessionId, sessionId as string));
+      return NextResponse.json(result[0]);
+    }
   } catch (error) {
     return NextResponse.json(
       { error: "Internal Server Error" },

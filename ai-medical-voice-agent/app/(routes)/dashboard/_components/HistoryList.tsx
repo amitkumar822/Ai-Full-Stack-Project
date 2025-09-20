@@ -1,11 +1,21 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AddNewSessionDialog from "./AddNewSessionDialog";
+import axios from "axios";
+import HistoryTable from "./HistoryTable";
 
 function HistoryList() {
   const [historyList, setHistoryList] = useState([]);
+  const getHistoryList = async () => {
+    const response = await axios.get("/api/session-chart?sessionId=all");
+    console.log("History List Response: ",response.data);
+    setHistoryList(response.data);
+  };
+  useEffect(() => {
+    getHistoryList();
+  }, []);
   return (
     <div className="mt-10">
       {historyList?.length === 0 ? (
@@ -23,7 +33,9 @@ function HistoryList() {
           <AddNewSessionDialog />
         </div>
       ) : (
-        <div>HistoryList</div>
+        <div>
+          <HistoryTable historyList={historyList} />
+        </div>
       )}
     </div>
   );
