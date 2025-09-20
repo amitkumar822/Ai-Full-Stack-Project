@@ -10,7 +10,6 @@ function HistoryList() {
   const [historyList, setHistoryList] = useState([]);
   const getHistoryList = async () => {
     const response = await axios.get("/api/session-chart?sessionId=all");
-    console.log("History List Response: ",response.data);
     setHistoryList(response.data);
   };
   useEffect(() => {

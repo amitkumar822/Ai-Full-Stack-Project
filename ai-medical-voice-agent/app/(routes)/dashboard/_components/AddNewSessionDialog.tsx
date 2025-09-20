@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogClose,
@@ -19,9 +19,11 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import SuggestedDocterCard from "./SuggestedDocterCard";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@clerk/nextjs";
 
 function AddNewSessionDialog() {
   const router = useRouter();
+  const { has } = useAuth();
   const [note, setNote] = useState("");
   const [loading, setloading] = useState(false);
   const [suggestDoctors, setsuggestDoctors] = useState<doctorAgent[]>([]);
@@ -36,7 +38,7 @@ function AddNewSessionDialog() {
         notes: note,
       });
       const data = response.data;
-      console.log("data: ",data);
+      console.log("data: ", data);
       setsuggestDoctors(data);
     } catch (error) {
       console.log(error);
@@ -55,9 +57,9 @@ function AddNewSessionDialog() {
         selectedDoctor: selectedDoctor,
       });
       const data = response.data;
-      if(data?.sessionId){
-       // Route new consultation screen
-       router.push(`/dashboard/medical-agent/${data?.sessionId}`);
+      if (data?.sessionId) {
+        // Route new consultation screen
+        router.push(`/dashboard/medical-agent/${data?.sessionId}`);
       }
       toast.success("Consultation started");
     } catch (error) {
@@ -68,11 +70,25 @@ function AddNewSessionDialog() {
     }
   };
 
+  const hasPremiumPlan = has?.({ plan: "pro" });
+  const [historyList, setHistoryList] = useState([]);
+  const getHistoryList = async () => {
+    const response = await axios.get("/api/session-chart?sessionId=all");
+    setHistoryList(response.data);
+  };
+  useEffect(() => {
+    getHistoryList();
+  }, []);
 
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button className="cursor-pointer mt-10">+ Start a Consultation</Button>
+        <Button
+          className="cursor-pointer mt-10"
+          disabled={!hasPremiumPlan && historyList.length >= 1}
+        >
+          + Start a Consultation
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -127,8 +143,17 @@ function AddNewSessionDialog() {
               )}
             </Button>
           ) : (
-            <Button onClick={onStartConsultation} disabled={loading} className="cursor-pointer">
-              Start Consultation {loading ? <Loader2 className="animate-spin" /> : <IconArrowRight />}
+            <Button
+              onClick={onStartConsultation}
+              disabled={loading}
+              className="cursor-pointer"
+            >
+              Start Consultation{" "}
+              {loading ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <IconArrowRight />
+              )}
             </Button>
           )}
         </DialogFooter>

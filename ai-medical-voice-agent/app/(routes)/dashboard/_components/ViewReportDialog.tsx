@@ -34,7 +34,7 @@ function ViewReportDialog({ record }: props) {
 
   return (
     <Dialog>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <Button variant={"link"} size={"sm"} className="cursor-pointer">
           View Report
         </Button>

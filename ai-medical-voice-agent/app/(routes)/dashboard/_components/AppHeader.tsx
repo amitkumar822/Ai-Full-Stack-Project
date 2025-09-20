@@ -7,17 +7,17 @@ const menuOptions = [
   {
     id: 1,
     label: "Home",
-    href: "/home",
+    href: "/",
   },
   {
     id: 2,
     label: "History",
-    href: "/history",
+    href: "/dashboard/history",
   },
   {
     id: 3,
     label: "Pricing",
-    href: "/pricing",
+    href: "/dashboard/billing",
   },
   {
     id: 4,
